@@ -17,6 +17,7 @@ require([
     'coreJS/offlineStorage',
     'coreModels/lockingModel',
     'velocity',
+    'diffDOM',
     'imageReady',
     'inview',
     'handlebars',

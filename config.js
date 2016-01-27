@@ -8,6 +8,7 @@ require.config({
         velocity: 'core/js/libraries/velocity',
         imageReady: 'core/js/libraries/imageReady',
         inview: 'core/js/libraries/inview',
+        diffDOM: 'core/js/libraries/diffDOM',
         a11y: 'core/js/libraries/jquery.a11y',
         scrollTo: 'core/js/libraries/scrollTo',
         coreJS: 'core/js',
