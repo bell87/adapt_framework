@@ -18,14 +18,14 @@ define(function(require) {
         },
 
         initialize: function(){
-			//standard initialization + renderState function
+
             this.view = new Backbone.Model({});
             this.redraw = _.debounce(this.redraw, 20);
             this.listenTo(this.model, "change", this.redraw);
             this.listenTo(this.view, "change", this.redraw);
 
             AdaptView.prototype.initialize.apply(this, arguments);
-            this.renderState();
+            
         },
 
         render: function() {
@@ -104,31 +104,6 @@ define(function(require) {
 
             return rtn;
 
-        },
-
-        renderState: function() {
-            if (!Handlebars.partials['state']) return;
-
-			// do not perform if component has .not-accessible class
-            if (this.$el.is(".not-accessible")) return;
-			// do not perform if component has .no-state class
-            if (this.$el.is(".no-state")) return;
-
-			//remove pre-exisiting states
-            var $previousState = this.$(".accessibility-state").remove();
-
-            //render and append state partial
-            var $rendered = $(Handlebars.partials['state']( this.model.toJSON() ));
-
-            //restore previous tab index if not on
-            var previousTabIndex = $previousState.find(".aria-label").attr("tabindex");
-            if (previousTabIndex == "-1") {
-                $rendered.find(".aria-label").attr("tabindex", previousTabIndex);
-            }
-
-            this.$el.append( $rendered );
-
-            this.listenToOnce(this.model, 'change:_isComplete', this.renderState);
         },
 
         postRender: function() {}
