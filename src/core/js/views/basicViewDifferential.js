@@ -10,7 +10,7 @@ define([
         initialize: function(options){
             options = options || {};
 
-            this.view = options.view || new Backbone.Model({});
+            this.state = options.state || new Backbone.Model({});
             this.redraw = _.debounce(this.redraw, 20);
 
             this.listenToOnce(Adapt, "remove", this.onRemove);
@@ -29,7 +29,7 @@ define([
                 
                 //start listening for view update changes
                 this.listenTo(this.model, "change", this.redraw);
-                this.listenTo(this.view, "change", this.redraw);
+                this.listenTo(this.state, "change", this.redraw);
             
                 this.postRender();
 
@@ -81,7 +81,7 @@ define([
 
         getRedrawData: function() {
 
-            var view
+            var state;
             var model;
             var collection;
 
@@ -101,17 +101,17 @@ define([
                 }
             }
 
-            if (this.view) {
-                if (this.view.toJSON) {
-                    view = this.view.toJSON();
+            if (this.state) {
+                if (this.state.toJSON) {
+                    state = this.state.toJSON();
                 } else {
-                    view = this.view;
+                    state = this.state;
                 }
             }
 
-            var rtn = _.extend({}, view, model, view);
+            var rtn = _.extend({}, state, model, state);
             
-            rtn.view = view;
+            rtn.state = state;
             rtn.model = model;
             rtn.collection = collection;
 

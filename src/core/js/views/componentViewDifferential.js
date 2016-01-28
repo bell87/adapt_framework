@@ -17,9 +17,10 @@ define(function(require) {
             + " nth-child-" + this.model.get("_nthChild");
         },
 
-        initialize: function(){
+        initialize: function(options){
+            options = options || {};
 
-            this.view = new Backbone.Model({});
+            this.state = options.state || new Backbone.Model({});
             this.redraw = _.debounce(this.redraw, 20);
 
             AdaptView.prototype.initialize.apply(this, arguments);
@@ -35,7 +36,7 @@ define(function(require) {
                 
                 //start listening for view update changes
                 this.listenTo(this.model, "change", this.redraw);
-                this.listenTo(this.view, "change", this.redraw);
+                this.listenTo(this.state, "change", this.redraw);
             
                 this.postRender();
                 
@@ -88,7 +89,7 @@ define(function(require) {
 
         getRedrawData: function() {
 
-            var view
+            var state;
             var model;
             var collection;
 
@@ -108,17 +109,17 @@ define(function(require) {
                 }
             }
 
-            if (this.view) {
-                if (this.view.toJSON) {
-                    view = this.view.toJSON();
+            if (this.state) {
+                if (this.state.toJSON) {
+                    state = this.state.toJSON();
                 } else {
-                    view = this.view;
+                    state = this.state;
                 }
             }
 
-            var rtn = _.extend({}, view, model, view);
+            var rtn = _.extend({}, state, model, state);
             
-            rtn.view = view;
+            rtn.state = state;
             rtn.model = model;
             rtn.collection = collection;
 
