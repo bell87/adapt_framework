@@ -45,7 +45,7 @@ define(function(require) {
             return this.redraw(true);
         },
 
-        redraw: function() {
+        redraw: function(initial) {
 
             var template = Handlebars.templates[this.constructor.template];
 
