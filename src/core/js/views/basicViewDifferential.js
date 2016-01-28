@@ -5,15 +5,21 @@ define([
 
     var DOMDiffer = new diffDOM();
 
-    var ComponentViewDifferential = Backbone.View.extend({
+    var BasicViewDifferential = Backbone.View.extend({
+
+        redrawOn: undefined,
+        redrawDebug: false,
+        redrawDebugName: "n/a",
 
         initialize: function(options){
             options = options || {};
 
             this.state = options.state || new Backbone.Model({});
-            this.redraw = _.debounce(this.redraw, 20);
+            this.redraw = _.debounce(this.redraw, 17);
 
-            this.listenToOnce(Adapt, "remove", this.onRemove);
+            this._isRemoved = false;
+
+            this.listenToOnce(Adapt, "remove", this.remove);
             
             this.preRender();
             this.render();
@@ -26,10 +32,36 @@ define([
             this.once("rendered", _.bind(function() {
                 // don't call postRender after remove
                 if(this._isRemoved) return;
+
+                function filterRedraw(model, value) {
+                    var shouldRedraw = false;
+                    switch (typeof this.redrawOn) {
+                    case "undefined":
+                        shouldRedraw = true;
+                        break;
+                    case "object":
+                        var changedKeys = _.keys(model.changed);
+                        shouldRedraw =_.some(changedKeys, _.bind(function(key) {
+                            return _.contains(this.redrawOn, key);
+                        }, this));
+                        if (shouldRedraw && this.redrawDebug) {
+                            console.log(this.model.get("_id"), this.redrawDebugName, "keys changed", changedKeys.join(","));
+                        }
+                        break;
+                    case "function":
+                        shouldRedraw = this.redrawOn(model, value);
+                        break;
+                    }
+                    
+
+                    if (shouldRedraw) {
+                        return this.redraw();
+                    }
+                }
                 
                 //start listening for view update changes
-                this.listenTo(this.model, "change", this.redraw);
-                this.listenTo(this.state, "change", this.redraw);
+                this.listenTo(this.model, "change", filterRedraw);
+                this.listenTo(this.state, "change", filterRedraw);
             
                 this.postRender();
 
@@ -42,11 +74,14 @@ define([
 
             if (this._isRemoved) return this;
 
+            var startTime = (new Date()).getTime();
+
             var template = Handlebars.templates[this.constructor.template];
 
             if (initial === true) {
                 //first render loads straight into DOM
                 this.el.innerHTML = template(this.getRedrawData());
+                if (this.redrawDebug) console.log(this.model.get("_id"), this.redrawDebugName, "rendered - ", (new Date()).getTime() - startTime+"ms");
                 _.defer(_.bind(function() {
                     this.trigger('rendered');
                 }, this));
@@ -54,7 +89,6 @@ define([
             }
             
             //all renders except first do a DOM differential
-            
             if (!this._diffDOM) {
                 var old = document.createElement("div");
                 var newer = document.createElement("div");
@@ -69,11 +103,17 @@ define([
 
             var diff = DOMDiffer.diff(this._diffDOM.old, this._diffDOM.newer);
             
+            if (this.redrawDebug) console.log(this.model.get("_id"), this.redrawDebugName, "redraw: created differential - ", (new Date()).getTime() - startTime+"ms");
+
             if(diff.length > 0) {
+                startTime = (new Date()).getTime();
                 DOMDiffer.apply(this.el, diff);
+                if (this.redrawDebug) console.log(this.model.get("_id"), this.redrawDebugName, "redraw: changed DOM - ", (new Date()).getTime() - startTime+"ms");
                 _.defer(_.bind(function() {
                     this.trigger('rendered');
                 }, this));
+            } else {
+                if (this.redrawDebug) console.log(this.model.get("_id"), this.redrawDebugName, "redraw: unfounded diff - no changes found");
             }
 
             return this;
@@ -119,22 +159,29 @@ define([
 
         },
 
-        onRemove: function() {
-            this._isRemoved = true;
-            this.remove();
+        remove: function() {
+            this.$el.remove();
+            this.detach();
         },
 
         empty: function() {
+            this.$el.empty();
+            this.detach();
+        },
+
+        detach: function() {
             this._isRemoved = true;
             this.undelegateEvents();
             this.stopListening();
-            this.$el.empty();
+            this.el = undefined;
+            this.$el = undefined;
+            this.state = undefined;
+            this.model = undefined;
+            this.collection = undefined;
         }
 
-    }, {
-        type:'component'
     });
 
-    return ComponentViewDifferential;
+    return BasicViewDifferential;
 
 });

@@ -1,6 +1,8 @@
 (function() {
     "use strict";
 
+    if (window.diffDOM) return;
+
     var diffcount;
 
     var forEach = Array.prototype.forEach
