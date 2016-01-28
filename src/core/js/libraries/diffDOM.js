@@ -190,6 +190,11 @@
         }
     };
 
+    var skipAttributeRegEx = /(^jquery)|(^sizzle)|(^a11y)|(^data)/i;
+    var skipAttribute = function(attr) {
+        return skipAttributeRegEx.test(attr);
+    };
+
     var isEqual = function(e1, e2) {
 
         var e1Attributes, e2Attributes;
@@ -703,10 +708,11 @@
                     		attributes[attributes.length] = (node.attributes.item(i));
                     	}
                     } else {
-                    	attributes = node.attributes;
+                    	attributes = Array.prototype.slice.call(node.attributes);
                     }
-                    forEach(Array.prototype.slice.call(attributes), 
+                    forEach(attributes, 
                         function(attribute) {
+                            if (skipAttribute(attribute.name)) return;
                             objNode.attributes[attribute.name] = attribute.value;
                         }
                     );
@@ -720,9 +726,9 @@
                     		childnodes[childnodes.length] = (node.childNodes.item(i));
                     	}
                     } else {
-                    	childnodes = node.childnodes;
+                    	childnodes = Array.prototype.slice.call(node.childnodes);
                     }
-                    forEach(Array.prototype.slice.call(childnodes),
+                    forEach(childnodes,
                         function(childNode) {
                             objNode.childNodes[objNode.childNodes.length] = (dobj.nodeToObj(childNode));
                         }

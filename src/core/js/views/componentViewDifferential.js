@@ -47,6 +47,8 @@ define(function(require) {
 
         redraw: function(initial) {
 
+            if (this._isRemoved) return this;
+
             var template = Handlebars.templates[this.constructor.template];
 
             if (initial === true) {
