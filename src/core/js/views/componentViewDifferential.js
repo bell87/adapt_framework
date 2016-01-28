@@ -39,17 +39,30 @@ define(function(require) {
                 Adapt.trigger(this.constructor.type + 'View:postRender', this);
             }, this));
 
-            return this.redraw();
+            return this.redraw(true);
         },
 
         redraw: function() {
 
             var template = Handlebars.templates[this.constructor.template];
 
+            if (initial === true) {
+                //first render loads straight into DOM
+                this.el.innerHTML = template(this.getRedrawData());
+                _.defer(_.bind(function() {
+                    this.trigger('rendered');
+                }, this));
+                return this;
+            }
+            
+            //all renders except first do a DOM differential
+            
             if (!this._diffDOM) {
+                var old = document.createElement("div");
+                var newer = document.createElement("div");
                 this._diffDOM = {
-                    "old": document.createElement("div"),
-                    "newer": document.createElement("div")
+                    "old": old,
+                    "newer": newer
                 };
             }
 
@@ -60,10 +73,12 @@ define(function(require) {
             
             if(diff.length > 0) {
                 DOMDiffer.apply(this.el, diff);
-                this.trigger('rendered');
+                _.defer(_.bind(function() {
+                    this.trigger('rendered');
+                }, this));
             }
 
-            return this
+            return this;
         },
 
         getRedrawData: function() {
