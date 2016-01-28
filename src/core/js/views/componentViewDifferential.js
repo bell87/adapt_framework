@@ -21,8 +21,6 @@ define(function(require) {
 
             this.view = new Backbone.Model({});
             this.redraw = _.debounce(this.redraw, 20);
-            this.listenTo(this.model, "change", this.redraw);
-            this.listenTo(this.view, "change", this.redraw);
 
             AdaptView.prototype.initialize.apply(this, arguments);
             
@@ -34,8 +32,13 @@ define(function(require) {
             this.once("rendered", _.bind(function() {
                 // don't call postRender after remove
                 if(this._isRemoved) return;
-
+                
+                //start listening for view update changes
+                this.listenTo(this.model, "change", this.redraw);
+                this.listenTo(this.view, "change", this.redraw);
+            
                 this.postRender();
+                
                 Adapt.trigger(this.constructor.type + 'View:postRender', this);
             }, this));
 
